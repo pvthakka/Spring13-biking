@@ -1,0 +1,36 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RecordActivity" >
+
+    <fragment
+        android:id="@+id/map"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        class="com.google.android.gms.maps.SupportMapFragment" />
+
+    <ImageView
+        android:id="@+id/start_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:clickable="true"
+        android:contentDescription="@string/start_recording"
+        android:onClick="startRecording"
+        android:src="@drawable/start_button" />
+
+    <ImageView
+        android:id="@+id/stop_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/start_button"
+        android:layout_centerHorizontal="true"
+        android:clickable="true"
+        android:contentDescription="@string/stop_recording"
+        android:onClick="stopRecording"
+        android:src="@drawable/stop_button"
+        android:visibility="invisible" />
+
+</RelativeLayout>
