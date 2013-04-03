@@ -1,5 +1,6 @@
 package com.example.wsbiking;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import android.app.AlertDialog;
@@ -7,26 +8,37 @@ import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
+import android.widget.Chronometer;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.wsbiking.R;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import android.support.v4.app.FragmentActivity;
 
 /**
  * 
- * @author Leon Dmello
- * The main route recording activity.
- * Tracks the route points when the user has started recording a route.
+ * @author Leon Dmello The main route recording activity. Tracks the route
+ *         points when the user has started recording a route.
  * 
  */
 public class RecordActivity extends FragmentActivity {
@@ -35,6 +47,7 @@ public class RecordActivity extends FragmentActivity {
 	 * available.
 	 */
 	private GoogleMap mMap;
+	private UiSettings mapUI;
 
 	private LocationManager locManager;
 	private LocationListener locationListener;
@@ -46,7 +59,6 @@ public class RecordActivity extends FragmentActivity {
 
 	// Variables to keep track of current route recording
 	private float totalDistance;
-	private long startTime;
 	private Location lastLocation;
 
 	// Database handler object
@@ -115,8 +127,19 @@ public class RecordActivity extends FragmentActivity {
 	private void setUpMap() {
 
 		mMap.setMyLocationEnabled(true);
-		routePoints = new ArrayList<RoutePoint>();
+
+		mapUI = mMap.getUiSettings();
+		mapUI.setZoomControlsEnabled(false);
+
 		locManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+		Location lastKnown = locManager.getLastKnownLocation(locManager
+				.getBestProvider(new Criteria(), false));
+
+		if (lastKnown != null)
+			moveCamera(lastKnown);
+
+		routePoints = new ArrayList<RoutePoint>();
 
 		// Define a listener that responds to location updates
 		locationListener = new LocationListener() {
@@ -142,12 +165,6 @@ public class RecordActivity extends FragmentActivity {
 					.isProviderEnabled(LocationManager.GPS_PROVIDER);
 		} catch (Exception ex) {
 		}
-		// try {
-		// network_enabled = locManager
-		// .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-		// } catch (Exception ex) {
-
-		// }
 
 		if (!gps_enabled) {
 			AlertDialog.Builder builder = new Builder(this);
@@ -157,26 +174,64 @@ public class RecordActivity extends FragmentActivity {
 		}
 	}
 
+	/**
+	 * Location changed listener to store route points
+	 * 
+	 * @param currentLocation
+	 */
 	public void locationChanged(Location currentLocation) {
-		// AlertDialog.Builder builder = new Builder(this);
-		// builder.setTitle("Location updated");
-		// builder.setMessage("Lat : " + location.getLatitude() + ", Long : "
-		// + location.getLongitude() + ", Source : "
-		// + location.getProvider());
-		// builder.create().show();
-
 		if (currentLocation != null) {
 
-			if (lastLocation != null)
+			if (lastLocation != null) {
 				totalDistance += currentLocation.distanceTo(lastLocation);
 
+				PolylineOptions rectOptions = new PolylineOptions().add(
+						new LatLng(lastLocation.getLatitude(), lastLocation
+								.getLongitude())).add(
+						new LatLng(currentLocation.getLatitude(),
+								currentLocation.getLongitude()));
+
+				rectOptions.color(Color.BLUE);
+
+				mMap.addPolyline(rectOptions);
+			}
+
+			TextView distance = (TextView) findViewById(R.id.tripDistance);
+			distance.setText(FormatTotalDistance());
+
 			lastLocation = new Location(currentLocation);
+
+			moveCamera(currentLocation);
 
 			routePoints.add(new RoutePoint(currentLocation.getLatitude(),
 					currentLocation.getLongitude()));
 		}
 	}
 
+	/**
+	 * Format distance in decimal meters to rounded meters or miles
+	 * 
+	 * @return
+	 */
+	private String FormatTotalDistance() {
+		if (totalDistance <= 160.934) {
+			return String.valueOf(Math.round(totalDistance) + " meters");
+		} else {
+			float tempDistance = totalDistance, calculatedDistance;
+			calculatedDistance = (float) Math.floor(tempDistance / 1609.34);
+			tempDistance %= 1609.34;
+			calculatedDistance += tempDistance / 1609.34;
+			calculatedDistance = Float.parseFloat(new DecimalFormat("#.##")
+					.format(calculatedDistance));
+			return String.valueOf(calculatedDistance + " miles");
+		}
+	}
+
+	/**
+	 * Start recording user route
+	 * 
+	 * @param btnStart
+	 */
 	public void startRecording(View btnStart) {
 
 		try {
@@ -189,15 +244,34 @@ public class RecordActivity extends FragmentActivity {
 
 			Resources res = getResources();
 
+			mapUI.setAllGesturesEnabled(false);
+			mapUI.setCompassEnabled(false);
+			mapUI.setMyLocationButtonEnabled(false);
+
+			// Get last known location and move camera
+			Location lastKnown = locManager.getLastKnownLocation(locManager
+					.getBestProvider(new Criteria(), false));
+
+			moveCamera(lastKnown);
+
 			// Register location listener to get periodic updates
 			locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
 					res.getInteger(R.integer.time_interval),
 					res.getInteger(R.integer.min_distance), locationListener);
 
 			// Initialize route recording parameters
-			startTime = System.currentTimeMillis();
 			totalDistance = 0;
 			lastLocation = null;
+
+			// Start stop watch
+			Chronometer timer = (Chronometer) findViewById(R.id.tripTimer);
+			timer.setBase(SystemClock.elapsedRealtime());
+			timer.setVisibility(View.VISIBLE);
+			timer.start();
+
+			TextView distance = (TextView) findViewById(R.id.tripDistance);
+			distance.setText("0 meters");
+			distance.setVisibility(View.VISIBLE);
 
 			// Hide play button
 			btnStart.setVisibility(View.INVISIBLE);
@@ -206,24 +280,47 @@ public class RecordActivity extends FragmentActivity {
 		}
 	}
 
+	/**
+	 * Stop recording the route
+	 * 
+	 * @param btnStop
+	 */
 	public void stopRecording(View btnStop) {
 
+		mapUI.setAllGesturesEnabled(true);
+		mapUI.setCompassEnabled(true);
+		mapUI.setMyLocationButtonEnabled(true);
+
+		// Stop stop watch
+		Chronometer timer = (Chronometer) findViewById(R.id.tripTimer);
+		timer.stop();
+		timer.setVisibility(View.INVISIBLE);
+
+		TextView distance = (TextView) findViewById(R.id.tripDistance);
+		distance.setVisibility(View.INVISIBLE);
+
+		// mMap.clear();
+
+		long elapsedTime = (SystemClock.elapsedRealtime() - timer.getBase()) / 1000;
+
 		if (routePoints.size() <= 1) {
-			Toast.makeText(getApplicationContext(),
+			Toast toast = Toast.makeText(getApplicationContext(),
 					"Need more than one point to save route",
-					Toast.LENGTH_SHORT).show();
+					Toast.LENGTH_SHORT);
+
+			toast.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
+			toast.show();
+
 		} else {
 			// Elapsed time in minutes
-			long elapsedTime = (System.currentTimeMillis() - startTime)
-					/ (1000 * 60);
-
 			locManager.removeUpdates(locationListener);
 
 			Intent intent = new Intent(this, RouteSave.class);
 			intent.putParcelableArrayListExtra("routePoints", routePoints);
 			intent.putExtra("totalDistance", totalDistance);
 			intent.putExtra("elapsedTime", elapsedTime);
-			intent.putExtra("avgSpeed", calculateSpeed(totalDistance, elapsedTime));
+			intent.putExtra("avgSpeed",
+					calculateSpeed(totalDistance, elapsedTime));
 			startActivity(intent);
 		}
 
@@ -234,8 +331,14 @@ public class RecordActivity extends FragmentActivity {
 		ImageView btnStart = (ImageView) findViewById(R.id.start_button);
 		btnStart.setVisibility(View.VISIBLE);
 	}
-	
 
+	/**
+	 * Calculate speed from distance and time
+	 * 
+	 * @param distance
+	 * @param duration
+	 * @return
+	 */
 	private float calculateSpeed(float distance, float duration) {
 		// TODO Test code
 
@@ -244,5 +347,21 @@ public class RecordActivity extends FragmentActivity {
 		hours += duration / 60 * 100;
 
 		return distance / hours;
+	}
+
+	/**
+	 * Move the camera to the location specified
+	 * 
+	 * @param newLocation
+	 */
+	private void moveCamera(Location newLocation) {
+		CameraPosition camPos = new CameraPosition.Builder()
+				.target(new LatLng(newLocation.getLatitude(), newLocation
+						.getLongitude())).zoom(14.3f).build();
+
+		CameraUpdate cameraUpdate = CameraUpdateFactory
+				.newCameraPosition(camPos);
+
+		mMap.animateCamera(cameraUpdate);
 	}
 }

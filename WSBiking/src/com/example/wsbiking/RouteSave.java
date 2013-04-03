@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -15,9 +16,9 @@ import android.widget.Toast;
 
 /**
  * 
- * @author Leon Dmello
- * This the activity which gets fired when route recording is stopped
- * It allows to discard or save a route with the facility to provide a title and description for the route.
+ * @author Leon Dmello This the activity which gets fired when route recording
+ *         is stopped It allows to discard or save a route with the facility to
+ *         provide a title and description for the route.
  * 
  */
 public class RouteSave extends Activity {
@@ -86,8 +87,12 @@ public class RouteSave extends Activity {
 	}
 
 	public void DiscardRoute(View btnDiscard) {
-		Toast.makeText(getApplicationContext(), "Route Discarded",
-				Toast.LENGTH_SHORT).show();
+		Toast toast = Toast.makeText(getApplicationContext(),
+				"Route Discarded", Toast.LENGTH_SHORT);
+
+		toast.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
+		toast.show();
+		
 		this.finish();
 	}
 
@@ -98,11 +103,14 @@ public class RouteSave extends Activity {
 		String routeTitle = edtTitle.getText().toString();
 		String routeDesc = edtDesc.getText().toString();
 
-//		dbHandler.addRoute(this.routePoints, routeTitle, routeDesc,
-//				this.totalDistance, this.elapsedTime, this.avgSpeed);
-		
-		Toast.makeText(getApplicationContext(), "Route Saved",
-				Toast.LENGTH_SHORT).show();
+		// dbHandler.addRoute(this.routePoints, routeTitle, routeDesc,
+		// this.totalDistance, this.elapsedTime, this.avgSpeed);
+
+		Toast toast = Toast.makeText(getApplicationContext(),
+				"Route Saved", Toast.LENGTH_SHORT);
+
+		toast.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
+		toast.show();
 	}
 
 	@Override

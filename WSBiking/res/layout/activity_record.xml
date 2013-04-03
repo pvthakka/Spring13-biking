@@ -33,4 +33,30 @@
         android:src="@drawable/stop_button"
         android:visibility="invisible" />
 
+    <Chronometer
+        android:id="@+id/tripTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/whiteroundedbackground"
+        android:padding="5dp"
+        android:textSize="30sp"
+        android:visibility="invisible" />
+    
+    <TextView
+        android:id="@+id/tripDistance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/whiteroundedbackground"
+        android:padding="5dp"
+        android:textSize="30sp"
+        android:visibility="invisible" />
+
 </RelativeLayout>
