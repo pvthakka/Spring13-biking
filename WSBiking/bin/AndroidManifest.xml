@@ -34,7 +34,7 @@
         android:theme="@style/AppTheme" >
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
-            android:value="AIzaSyBu9GA9_YaPBQ0xeECTzSG60vPicKu7RGA" />
+            android:value="AIzaSyAHOCzUViUDWs12hhANu1qSu44u2sah3oM" />
 
         <activity
             android:name="com.example.wsbiking.RecordActivity"
