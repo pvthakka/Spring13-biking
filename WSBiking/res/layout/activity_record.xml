@@ -43,6 +43,7 @@
         android:layout_marginTop="15dp"
         android:background="@drawable/whiteroundedbackground"
         android:padding="5dp"
+        android:textColor="#FFFFFF"
         android:textSize="30sp"
         android:visibility="invisible" />
     
@@ -56,6 +57,7 @@
         android:layout_marginTop="15dp"
         android:background="@drawable/whiteroundedbackground"
         android:padding="5dp"
+        android:textColor="#FFFFFF"
         android:textSize="30sp"
         android:visibility="invisible" />
 

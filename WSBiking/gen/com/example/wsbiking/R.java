@@ -139,22 +139,32 @@ containing a value of this type.
         public static final int activity_vertical_margin=0x7f060001;
     }
     public static final class drawable {
-        public static final int ic_launcher=0x7f020000;
-        public static final int start_button=0x7f020001;
-        public static final int stop_button=0x7f020002;
-        public static final int whiteroundedbackground=0x7f020003;
+        public static final int cycling=0x7f020000;
+        public static final int finish=0x7f020001;
+        public static final int ic_launcher=0x7f020002;
+        public static final int mylocation=0x7f020003;
+        public static final int showonmap=0x7f020004;
+        public static final int start_button=0x7f020005;
+        public static final int stop_button=0x7f020006;
+        public static final int whiteroundedbackground=0x7f020007;
+        public static final int wsbike=0x7f020008;
     }
     public static final class id {
         public static final int LinearLayout1=0x7f04000a;
-        public static final int action_settings=0x7f040013;
+        public static final int RelativeLayout1=0x7f040013;
+        public static final int TxtVwRouteDesc=0x7f040016;
+        public static final int action_routes=0x7f04001c;
+        public static final int action_settings=0x7f04001d;
         public static final int btnDiscard=0x7f040011;
         public static final int btnSave=0x7f040012;
         public static final int edtTxTitle=0x7f04000e;
         public static final int edtTxtDesc=0x7f040010;
         public static final int hybrid=0x7f040004;
+        public static final int imgBtnShowMap=0x7f040017;
         public static final int map=0x7f040005;
         public static final int none=0x7f040000;
         public static final int normal=0x7f040001;
+        public static final int routesList=0x7f040014;
         public static final int satellite=0x7f040002;
         public static final int start_button=0x7f040006;
         public static final int stop_button=0x7f040007;
@@ -162,8 +172,13 @@ containing a value of this type.
         public static final int tripDistance=0x7f040009;
         public static final int tripTimer=0x7f040008;
         public static final int txtVwDesc=0x7f04000f;
+        public static final int txtVwDistance=0x7f04001a;
         public static final int txtVwHeading=0x7f04000b;
         public static final int txtVwImp=0x7f04000d;
+        public static final int txtVwRouteID=0x7f040018;
+        public static final int txtVwRouteTitle=0x7f040015;
+        public static final int txtVwSpeed=0x7f040019;
+        public static final int txtVwTime=0x7f04001b;
         public static final int txtVwTitle=0x7f04000c;
     }
     public static final class integer {
@@ -173,12 +188,16 @@ containing a value of this type.
     public static final class layout {
         public static final int activity_record=0x7f030000;
         public static final int activity_route_save=0x7f030001;
+        public static final int activity_view_routes=0x7f030002;
+        public static final int singleroute=0x7f030003;
     }
     public static final class menu {
         public static final int record=0x7f090000;
         public static final int route_save=0x7f090001;
+        public static final int view_routes=0x7f090002;
     }
     public static final class string {
+        public static final int action_routes=0x7f050013;
         public static final int action_settings=0x7f050012;
         public static final int app_name=0x7f050011;
         /**   Title for notification shown when GooglePlayServices is unavailable [CHAR LIMIT=70] 
@@ -190,8 +209,8 @@ containing a value of this type.
         /**   Requested by string saying which app requested the notification. [CHAR LIMIT=42] 
          */
         public static final int auth_client_requested_by_msg=0x7f050010;
-        public static final int button_discard_route=0x7f05001c;
-        public static final int button_save_route=0x7f05001d;
+        public static final int button_discard_route=0x7f05001d;
+        public static final int button_save_route=0x7f05001e;
         /**  Button in confirmation dialog to enable Google Play services.  Clicking it
         will direct user to application settings of Google Play services where they
         can enable it [CHAR LIMIT=40] 
@@ -245,17 +264,25 @@ containing a value of this type.
         find the service-side assets. [CHAR LIMIT=25] 
          */
         public static final int common_signin_button_text_long=0x7f05000d;
-        public static final int hello_world=0x7f050013;
-        public static final int mark_important=0x7f05001a;
-        public static final int route_details=0x7f050017;
-        public static final int route_title_description_text=0x7f05001b;
-        public static final int route_title_hint=0x7f050019;
-        public static final int route_title_text=0x7f050018;
-        public static final int start_recording=0x7f050014;
-        public static final int stop_recording=0x7f050015;
-        public static final int title_activity_route_save=0x7f05001f;
-        public static final int title_activity_save_route=0x7f050016;
-        public static final int title_activity_store_route=0x7f05001e;
+        public static final int heading_distance=0x7f050027;
+        public static final int heading_duration=0x7f050026;
+        public static final int heading_speed=0x7f050025;
+        public static final int hello_world=0x7f050014;
+        public static final int mark_important=0x7f05001b;
+        public static final int message_GPSdisabled=0x7f050022;
+        public static final int message_single_route_point=0x7f050023;
+        public static final int route_details=0x7f050018;
+        public static final int route_title_description_text=0x7f05001c;
+        public static final int route_title_hint=0x7f05001a;
+        public static final int route_title_text=0x7f050019;
+        public static final int show_on_map_image=0x7f050028;
+        public static final int start_recording=0x7f050015;
+        public static final int stop_recording=0x7f050016;
+        public static final int title_GPSdisabled=0x7f050021;
+        public static final int title_activity_route_save=0x7f050020;
+        public static final int title_activity_save_route=0x7f050017;
+        public static final int title_activity_store_route=0x7f05001f;
+        public static final int title_activity_view_routes=0x7f050024;
     }
     public static final class style {
         /** 

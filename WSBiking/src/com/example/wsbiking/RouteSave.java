@@ -82,7 +82,7 @@ public class RouteSave extends Activity {
 
 		if (!btnSave.isEnabled() && titleText.length() > 0)
 			btnSave.setEnabled(true);
-		else
+		else if (titleText.length() == 0)
 			btnSave.setEnabled(false);
 	}
 
@@ -92,7 +92,7 @@ public class RouteSave extends Activity {
 
 		toast.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
 		toast.show();
-		
+
 		this.finish();
 	}
 
@@ -103,14 +103,23 @@ public class RouteSave extends Activity {
 		String routeTitle = edtTitle.getText().toString();
 		String routeDesc = edtDesc.getText().toString();
 
-		// dbHandler.addRoute(this.routePoints, routeTitle, routeDesc,
-		// this.totalDistance, this.elapsedTime, this.avgSpeed);
+		if (dbHandler.addRoute(this.routePoints, routeTitle, routeDesc,
+				this.totalDistance, this.elapsedTime, this.avgSpeed)) {
 
-		Toast toast = Toast.makeText(getApplicationContext(),
-				"Route Saved", Toast.LENGTH_SHORT);
+			Toast toast = Toast.makeText(getApplicationContext(),
+					"Route Saved", Toast.LENGTH_SHORT);
 
-		toast.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
-		toast.show();
+			toast.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
+			toast.show();
+		} else {
+			Toast toast = Toast.makeText(getApplicationContext(),
+					"Route Discarded", Toast.LENGTH_SHORT);
+
+			toast.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
+			toast.show();
+		}
+		
+		this.finish();
 	}
 
 	@Override

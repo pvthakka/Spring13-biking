@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
@@ -11,9 +12,9 @@ import android.util.Log;
 
 /**
  * 
- * @author Leon Dmello
- * All the database interactions will go in this Singleton handler for DB
- *  
+ * @author Leon Dmello All the database interactions will go in this Singleton
+ *         handler for DB
+ * 
  */
 public class DatabaseHandler extends SQLiteOpenHelper {
 	// All Static variables
@@ -40,11 +41,19 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
 	// Routes Table Columns names
 	private static final String ROUTEID = "routeID";
-	private static final String AVGSPEED = "speed";
-	private static final String DISTANCE = "distance";
 	private static final String NAME = "name";
 	private static final String DESCRIPTION = "description";
+	private static final String AVGSPEED = "speed";
+	private static final String DISTANCE = "distance";
 	private static final String DURATION = "duration";
+
+	// Routes Table Column indexes
+	private static final Integer ROUTEIDINDEX = 0;
+	private static final Integer NAMEINDEX = 1;
+	private static final Integer DESCRIPTIONINDEX = 2;
+	private static final Integer AVGSPEEDINDEX = 3;
+	private static final Integer DISTANCEINDEX = 4;
+	private static final Integer DURATIONINDEX = 5;
 
 	// Route points Table Columns names
 	private static final String LATITUDE = "latitude";
@@ -198,5 +207,55 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Returns an array list containing all routes saved
+	 * 
+	 * @return
+	 */
+	public ArrayList<Route> getRoutes() {
+
+		Cursor cursor = null;
+		ArrayList<Route> allRoutes = null;
+
+		try {
+
+			SQLiteDatabase db = this.getWritableDatabase();
+
+			cursor = db.query(TABLE_ROUTES, new String[] { ROUTEID, NAME,
+					DESCRIPTION, AVGSPEED, DURATION, DISTANCE }, null, null,
+					null, null, null);
+
+			if (cursor.moveToFirst()) {
+				allRoutes = new ArrayList<Route>();
+				Integer routeID;
+				String routeName, routeDesc;
+				float routeSpeed, routeDuration, routeDistance;
+				
+				while (!cursor.isAfterLast()) {
+					
+					routeID = cursor.getInt(ROUTEIDINDEX);
+					routeName = cursor.getString(NAMEINDEX);
+					routeDesc = cursor.getString(DESCRIPTIONINDEX);
+					routeSpeed = cursor.getInt(AVGSPEEDINDEX);
+					routeDuration = cursor.getInt(DURATIONINDEX);
+					routeDistance = cursor.getInt(DISTANCEINDEX);
+					
+					allRoutes.add(new Route(routeID, routeName, routeDesc, routeSpeed, routeDuration, routeDistance));
+					
+					cursor.moveToNext();
+				}
+			}
+
+			cursor.close();
+			
+		} catch (Exception ex) {
+			Log.e(LOG_TAG,
+					"Failed to get all routes from route table: "
+							+ ex.getMessage());
+		}
+
+		return allRoutes;
 	}
 }

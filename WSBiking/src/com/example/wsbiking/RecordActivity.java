@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Chronometer;
 import android.widget.ImageView;
@@ -29,25 +30,43 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import android.support.v4.app.FragmentActivity;
 
 /**
+ * TODO: Improve code structure(Remove redundancy, error checking, try catch,
+ * optimization etc.)
  * 
  * @author Leon Dmello The main route recording activity. Tracks the route
  *         points when the user has started recording a route.
  * 
  */
 public class RecordActivity extends FragmentActivity {
+
+	/**
+	 * Constants used in this file
+	 */
+	private static final float DEFAULTZOOM = 14.3f;
+	private static final float METER_THRESHOLD = 160.934f;
+	private static final float METERS_TO_MILES = 1609.34f;
+	private static final CharSequence INITIAL_DISTANCE = "0 meters";
+
 	/**
 	 * Note that this may be null if the Google Play services APK is not
 	 * available.
 	 */
 	private GoogleMap mMap;
+
 	private UiSettings mapUI;
+	private Marker myLocationMarker;
+	private Marker startMarker;
+	private Marker endMarker;
 
 	private LocationManager locManager;
 	private LocationListener locationListener;
@@ -61,8 +80,8 @@ public class RecordActivity extends FragmentActivity {
 	private float totalDistance;
 	private Location lastLocation;
 
-	// Database handler object
 	private DatabaseHandler dbHandler;
+	private Resources resourceHandler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -70,12 +89,29 @@ public class RecordActivity extends FragmentActivity {
 		setContentView(R.layout.activity_record);
 		setUpMapIfNeeded();
 		dbHandler = DatabaseHandler.getInstance(this);
+		resourceHandler = getResources();
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.record, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_routes:
+			// TODO: Call show route activity
+			Intent intent = new Intent(this, ViewRoutes.class);
+			startActivity(intent);
+
+			break;
+		default:
+			break;
+		}
+
 		return true;
 	}
 
@@ -126,8 +162,6 @@ public class RecordActivity extends FragmentActivity {
 	 */
 	private void setUpMap() {
 
-		mMap.setMyLocationEnabled(true);
-
 		mapUI = mMap.getUiSettings();
 		mapUI.setZoomControlsEnabled(false);
 
@@ -137,7 +171,7 @@ public class RecordActivity extends FragmentActivity {
 				.getBestProvider(new Criteria(), false));
 
 		if (lastKnown != null)
-			moveCamera(lastKnown);
+			moveCamera(lastKnown, DEFAULTZOOM);
 
 		routePoints = new ArrayList<RoutePoint>();
 
@@ -168,8 +202,10 @@ public class RecordActivity extends FragmentActivity {
 
 		if (!gps_enabled) {
 			AlertDialog.Builder builder = new Builder(this);
-			builder.setTitle("Attention!");
-			builder.setMessage("Sorry, location cannot be determined. Please enable GPS");
+			builder.setTitle(resourceHandler
+					.getString(R.string.title_GPSdisabled));
+			builder.setMessage(resourceHandler
+					.getString(R.string.message_GPSdisabled));
 			builder.create().show();
 		}
 	}
@@ -192,16 +228,26 @@ public class RecordActivity extends FragmentActivity {
 								currentLocation.getLongitude()));
 
 				rectOptions.color(Color.BLUE);
+				rectOptions.width((float) 1.0);
 
 				mMap.addPolyline(rectOptions);
+			} else {
+				startMarker = mMap.addMarker(new MarkerOptions().position(
+						new LatLng(currentLocation.getLatitude(),
+								currentLocation.getLongitude())).icon(
+						BitmapDescriptorFactory
+								.fromResource(R.drawable.cycling)));
 			}
 
 			TextView distance = (TextView) findViewById(R.id.tripDistance);
-			distance.setText(FormatTotalDistance());
+			distance.setText(formatTotalDistance());
+
+			myLocationMarker.setPosition(new LatLng(currentLocation
+					.getLatitude(), currentLocation.getLongitude()));
 
 			lastLocation = new Location(currentLocation);
 
-			moveCamera(currentLocation);
+			moveCamera(currentLocation, mMap.getCameraPosition().zoom);
 
 			routePoints.add(new RoutePoint(currentLocation.getLatitude(),
 					currentLocation.getLongitude()));
@@ -213,14 +259,15 @@ public class RecordActivity extends FragmentActivity {
 	 * 
 	 * @return
 	 */
-	private String FormatTotalDistance() {
-		if (totalDistance <= 160.934) {
+	private String formatTotalDistance() {
+		if (totalDistance <= METER_THRESHOLD) {
 			return String.valueOf(Math.round(totalDistance) + " meters");
 		} else {
 			float tempDistance = totalDistance, calculatedDistance;
-			calculatedDistance = (float) Math.floor(tempDistance / 1609.34);
-			tempDistance %= 1609.34;
-			calculatedDistance += tempDistance / 1609.34;
+			calculatedDistance = (float) Math.floor(tempDistance
+					/ METERS_TO_MILES);
+			tempDistance %= METERS_TO_MILES;
+			calculatedDistance += tempDistance / METERS_TO_MILES;
 			calculatedDistance = Float.parseFloat(new DecimalFormat("#.##")
 					.format(calculatedDistance));
 			return String.valueOf(calculatedDistance + " miles");
@@ -242,26 +289,45 @@ public class RecordActivity extends FragmentActivity {
 
 		if (gps_enabled) {
 
-			Resources res = getResources();
-
-			mapUI.setAllGesturesEnabled(false);
 			mapUI.setCompassEnabled(false);
-			mapUI.setMyLocationButtonEnabled(false);
+
+			mMap.clear();
+			startMarker = endMarker = null;
 
 			// Get last known location and move camera
 			Location lastKnown = locManager.getLastKnownLocation(locManager
 					.getBestProvider(new Criteria(), false));
 
-			moveCamera(lastKnown);
+			if (lastKnown != null) {
+
+				LatLng lastKnownLatLng = new LatLng(lastKnown.getLatitude(),
+						lastKnown.getLongitude());
+
+				myLocationMarker = mMap.addMarker(new MarkerOptions().position(
+						lastKnownLatLng).icon(
+						BitmapDescriptorFactory
+								.fromResource(R.drawable.mylocation)));
+
+				startMarker = mMap.addMarker(new MarkerOptions().position(
+						lastKnownLatLng).icon(
+						BitmapDescriptorFactory
+								.fromResource(R.drawable.cycling)));
+
+				lastLocation = new Location(lastKnown);
+
+				moveCamera(lastKnown, DEFAULTZOOM);
+			} else {
+				lastLocation = null;
+			}
 
 			// Register location listener to get periodic updates
 			locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-					res.getInteger(R.integer.time_interval),
-					res.getInteger(R.integer.min_distance), locationListener);
+					resourceHandler.getInteger(R.integer.time_interval),
+					resourceHandler.getInteger(R.integer.min_distance),
+					locationListener);
 
-			// Initialize route recording parameters
+			// TODO: Initialize route recording parameters
 			totalDistance = 0;
-			lastLocation = null;
 
 			// Start stop watch
 			Chronometer timer = (Chronometer) findViewById(R.id.tripTimer);
@@ -270,7 +336,7 @@ public class RecordActivity extends FragmentActivity {
 			timer.start();
 
 			TextView distance = (TextView) findViewById(R.id.tripDistance);
-			distance.setText("0 meters");
+			distance.setText(INITIAL_DISTANCE);
 			distance.setVisibility(View.VISIBLE);
 
 			// Hide play button
@@ -287,9 +353,7 @@ public class RecordActivity extends FragmentActivity {
 	 */
 	public void stopRecording(View btnStop) {
 
-		mapUI.setAllGesturesEnabled(true);
 		mapUI.setCompassEnabled(true);
-		mapUI.setMyLocationButtonEnabled(true);
 
 		// Stop stop watch
 		Chronometer timer = (Chronometer) findViewById(R.id.tripTimer);
@@ -298,22 +362,30 @@ public class RecordActivity extends FragmentActivity {
 
 		TextView distance = (TextView) findViewById(R.id.tripDistance);
 		distance.setVisibility(View.INVISIBLE);
-
-		// mMap.clear();
-
-		long elapsedTime = (SystemClock.elapsedRealtime() - timer.getBase()) / 1000;
+		myLocationMarker.remove();
 
 		if (routePoints.size() <= 1) {
+
+			mMap.clear();
+
 			Toast toast = Toast.makeText(getApplicationContext(),
-					"Need more than one point to save route",
+					resourceHandler
+							.getString(R.string.message_single_route_point),
 					Toast.LENGTH_SHORT);
 
 			toast.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
 			toast.show();
 
 		} else {
-			// Elapsed time in minutes
-			locManager.removeUpdates(locationListener);
+
+			endMarker = mMap.addMarker(new MarkerOptions().position(
+					new LatLng(lastLocation.getLatitude(), lastLocation
+							.getLongitude())).icon(
+					BitmapDescriptorFactory.fromResource(R.drawable.finish)));
+
+			// Convert in terms of minutes
+			float elapsedTime = (float) (SystemClock.elapsedRealtime() - timer
+					.getBase()) / (float) (1000 * 60);
 
 			Intent intent = new Intent(this, RouteSave.class);
 			intent.putParcelableArrayListExtra("routePoints", routePoints);
@@ -325,6 +397,7 @@ public class RecordActivity extends FragmentActivity {
 		}
 
 		routePoints.clear();
+		locManager.removeUpdates(locationListener);
 
 		// Hide Stop Button
 		btnStop.setVisibility(View.INVISIBLE);
@@ -340,7 +413,8 @@ public class RecordActivity extends FragmentActivity {
 	 * @return
 	 */
 	private float calculateSpeed(float distance, float duration) {
-		// TODO Test code
+		// TODO Implement a full proof method to calculate average speed from
+		// distance and time
 
 		float hours = duration / 60;
 		duration = duration % 60;
@@ -354,10 +428,10 @@ public class RecordActivity extends FragmentActivity {
 	 * 
 	 * @param newLocation
 	 */
-	private void moveCamera(Location newLocation) {
+	private void moveCamera(Location newLocation, float zoomLevel) {
 		CameraPosition camPos = new CameraPosition.Builder()
 				.target(new LatLng(newLocation.getLatitude(), newLocation
-						.getLongitude())).zoom(14.3f).build();
+						.getLongitude())).zoom(zoomLevel).build();
 
 		CameraUpdate cameraUpdate = CameraUpdateFactory
 				.newCameraPosition(camPos);
