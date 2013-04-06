@@ -15,11 +15,13 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Chronometer;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,6 +40,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import android.support.v4.app.FragmentActivity;
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.model.GraphUser;
 
 /**
  * TODO: Improve code structure(Remove redundancy, error checking, try catch,
@@ -82,6 +88,9 @@ public class RecordActivity extends FragmentActivity {
 
 	private DatabaseHandler dbHandler;
 	private Resources resourceHandler;
+	
+	private Session session;
+	private EditText fbUserId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +99,9 @@ public class RecordActivity extends FragmentActivity {
 		setUpMapIfNeeded();
 		dbHandler = DatabaseHandler.getInstance(this);
 		resourceHandler = getResources();
+		fbUserId = (EditText) findViewById(R.id.fbUserId);
+		session = Session.getActiveSession();
+		setName(session);
 	}
 
 	@Override
@@ -438,4 +450,28 @@ public class RecordActivity extends FragmentActivity {
 
 		mMap.animateCamera(cameraUpdate);
 	}
+	
+	private void setName(final Session session) {
+	    // Make an API call to get user data and define a 
+	    // new callback to handle the response.
+	    Request request = Request.newMeRequest(session, 
+	            new Request.GraphUserCallback() {
+	    		@Override
+	    		public void onCompleted(GraphUser user, Response response) {
+	            // If the response is successful
+	            if (session == Session.getActiveSession()) {
+	                if (user != null) {
+
+	                    Log.i("pratik", "username "+user.getId()+user.getFirstName() + " " + user.getLastName());
+	                    fbUserId.setText(user.getId());
+	                }
+	            }
+	            if (response.getError() != null) {
+	                // Handle errors, will do so later.
+	            }
+	        }
+
+	    });
+	    request.executeAsync();
+	} 
 }

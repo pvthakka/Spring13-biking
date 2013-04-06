@@ -61,4 +61,12 @@
         android:textSize="30sp"
         android:visibility="invisible" />
 
+    <EditText 
+        android:id="@+id/fbUserId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:visibility="invisible"/>
+    
 </RelativeLayout>
